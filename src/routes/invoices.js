@@ -2,10 +2,11 @@ const express = require("express")
 
 const Invoice = require('../models/invoice')
 const moment = require('moment');
-
+const auth = require('../middleware/auth')
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+// Create Invoice (Protected)
+router.post("/", auth, async (req, res) => {  // Add auth middleware here
     try {
         const { invoiceNumber, clientName, date, amount, status } = req.body;
 
@@ -31,8 +32,8 @@ router.post("/", async (req, res) => {
 });
 
 
-// Get All Invoices
-router.get('/', async (req, res) => {
+// Get All Invoices (Protected)
+router.get('/', auth, async (req, res) => { //Add auth middleware here
     try {
         const invoices = await Invoice.find();
         res.status(200).json(invoices);
@@ -41,9 +42,8 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Update Invoice
-router.put('/:id', async (req, res) => {
-    //const {id} = req.params;
+// Update Invoice (Protected)
+router.put('/:id', auth, async (req, res) => { //Add auth middleware here
     try {
         const invoice = await Invoice.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.status(200).json(invoice);
@@ -52,8 +52,8 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Delete Invoice
-router.delete('/:id', async (req, res) => {
+// Delete Invoice (Protected)
+router.delete('/:id', auth, async (req, res) => { //Add auth middleware here
     try {
         await Invoice.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'Invoice deleted' });
@@ -61,6 +61,7 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 
 module.exports = router;
