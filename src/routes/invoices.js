@@ -1,20 +1,43 @@
-const express = require("express")
-
-const Invoice = require('../models/invoice')
+const express = require("express");
+const Invoice = require('../models/invoice');
 const moment = require('moment');
-const auth = require('../middleware/auth')
+const auth = require('../middleware/auth');
 const router = express.Router();
+
+// Function to generate a unique invoice number
+async function generateUniqueInvoiceNumber() {
+    let invoiceNumber;
+    let isUnique = false;
+
+    while (!isUnique) {
+        // Generate a random invoice number (you can customize the format)
+        invoiceNumber = 'INV-' + Math.floor(100000 + Math.random() * 900000); // Example: INV-123456
+
+        // Check if the invoice number already exists in the database
+        const existingInvoice = await Invoice.findOne({ invoiceNumber });
+
+        if (!existingInvoice) {
+            isUnique = true;
+        }
+    }
+
+    return invoiceNumber;
+}
+
 
 // Create Invoice (Protected)
 router.post("/", auth, async (req, res) => {  // Add auth middleware here
     try {
-        const { invoiceNumber, clientName, date, amount, status } = req.body;
+        const { clientName, date, amount, status } = req.body;
 
         // Parse the date from DD-MM-YYYY to ISO format
         const parsedDate = moment(date, "DD-MM-YYYY", true); // Strict parsing
         if (!parsedDate.isValid()) {
             return res.status(400).json({ error: "Invalid date format. Use DD-MM-YYYY." });
         }
+
+        // Generate a unique invoice number
+        const invoiceNumber = await generateUniqueInvoiceNumber();
 
         const invoice = new Invoice({
             invoiceNumber,
@@ -61,7 +84,5 @@ router.delete('/:id', auth, async (req, res) => { //Add auth middleware here
         res.status(500).json({ error: err.message });
     }
 });
-
-
 
 module.exports = router;
